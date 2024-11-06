@@ -64,7 +64,7 @@ def count_words(filename, stops):
     wordRe = re.compile(r'\w+')
     count = {}
 
-    with open(filename) as dataFile:
+    with open(filename, "r", encoding = "utf-8") as dataFile:
         for line in dataFile:
             for word in wordRe.findall(line.lower()):
                 if word not in stops:
@@ -74,6 +74,8 @@ def count_words(filename, stops):
                         count[word] += 1
                     else:
                         count[word] = 1
+
+    return count
 
 ##############################
 # Compute counts for individual documents
@@ -120,12 +122,9 @@ for i in range(len(docs)-1):
 # Sort, and print top N results
 
 top_N = 20
-
-pairs = list(results) # DUMMY CODE LINE 
-# Replace with code to sort results based on scores.
-# Have only results for highest "top_N" scores printed.
-
-# Printing
+pairs = sorted(results, key=lambda v: results[v], reverse=True)
+if top_N > 0:
+    pairs = pairs[:top_N]
 c = 0
 for pair in pairs:
     c += 1

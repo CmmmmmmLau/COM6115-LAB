@@ -63,7 +63,7 @@ def stem_word(word):
 # Returns a dictionary of word counts
 
 def count_words(filename, stops):
-    wordRE = re.compile('[A-Za-z]+')
+    wordRE = re.compile(r'\w+')
     counts = {}
     with open(filename, 'r') as infile:
         for line in infile:
