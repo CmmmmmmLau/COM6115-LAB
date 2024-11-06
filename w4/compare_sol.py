@@ -1,6 +1,6 @@
 """\
 ------------------------------------------------------------
-USE: python <PROGNAME> (options) file1...fileN
+USE: python  (options) file1...fileN
 OPTIONS:
     -h : print this help message
     -s FILE : use stoplist file FILE
@@ -21,8 +21,8 @@ opts = dict(opts)
 
 if '-h' in opts:
     progname = sys.argv[0]
-    progname = progname.split('/')[-1] # strip out extended path
-    help = __doc__.replace('<PROGNAME>', progname, 1)
+    progname = progname.split('/')[-1]  # strip out extended path
+    help = __doc__.replace('', progname, 1)
     print(help, file=sys.stderr)
     sys.exit()
 
@@ -44,16 +44,18 @@ print('INPUT-FILES:', filenames, file=sys.stderr)
 stops = set()
 if '-s' in opts:
     with open(opts['-s'], 'r') as stop_fs:
-        for line in stop_fs :
+        for line in stop_fs:
             stops.add(line.strip())
-            
+
 ##############################
 # Stemming function
 
 stemmer = PorterStemmer().stem
 
+
 def stem_word(word):
     return stemmer(word)
+
 
 ##############################
 # COUNT-WORDS function. 
@@ -61,58 +63,65 @@ def stem_word(word):
 # Returns a dictionary of word counts
 
 def count_words(filename, stops):
-    wordRe = re.compile(r'\w+')
-    count = {}
-
-    with open(filename) as dataFile:
-        for line in dataFile:
-            for word in wordRe.findall(line.lower()):
+    wordRE = re.compile('[A-Za-z]+')
+    counts = {}
+    with open(filename, 'r') as infile:
+        for line in infile:
+            for word in wordRE.findall(line.lower()):
                 if word not in stops:
                     if '-p' in opts:
                         word = stem_word(word)
-                    if word in count:
-                        count[word] += 1
+                    if word in counts:
+                        counts[word] += 1
                     else:
-                        count[word] = 1
+                        counts[word] = 1
+    return counts
+
 
 ##############################
 # Compute counts for individual documents
 
-docs = [ ]
+docs = []
 
 for infile in filenames:
     docs.append(count_words(infile, stops))
 
+
 ##############################
 # Compute similarity score for document pair
-# Inputs are dictionaries of counts for each doc
-# Returns similarity score
 
 def jaccard(doc1, doc2):
-    set1 = set(doc1)
-    set2 = set(doc2)
-
-    intersection = set1.intersection(set2)
-    union = set1.union(set2)
-
+    wds1 = set(doc1)
+    wds2 = set(doc2)
     if '-b' in opts:
-        return len(intersection) / len(union)
-
+        over = len(wds1 & wds2)  # where '&' is set intersection op
+        under = len(wds1 | wds2)  # where '|' is set union op
     else:
-        top = bottom = 0
-        for word in union:
-            if word in doc1 and word in doc2:
-                top += min(doc1[word], doc2[word])
+        over = under = 0
+        for wd in (wds1 | wds2):
 
-            bottom += max(doc1.get(word, 0), doc2.get(word, 0))
-        return top / bottom
+            if wd in doc1 and wd in doc2:
+                over += min(doc1[wd], doc2[wd])
+
+            wmax = 0
+            if wd in doc1:
+                wmax = doc1[wd]
+            if wd in doc2:
+                wmax = max(doc2[wd], wmax)
+            under += wmax
+
+    if under > 0:
+        return over / under
+    else:
+        return 0.0
+
 
 ##############################
 # Compute scores for all document pairs
 
 results = {}
-for i in range(len(docs)-1):
-    for j in range(i+1, len(docs)):        
+for i in range(len(docs) - 1):
+    for j in range(i + 1, len(docs)):
         pair_name = '%s <> %s' % (filenames[i], filenames[j])
         results[pair_name] = jaccard(docs[i], docs[j])
 
@@ -120,12 +129,9 @@ for i in range(len(docs)-1):
 # Sort, and print top N results
 
 top_N = 20
-
-pairs = list(results) # DUMMY CODE LINE 
-# Replace with code to sort results based on scores.
-# Have only results for highest "top_N" scores printed.
-
-# Printing
+pairs = sorted(results, key=lambda v: results[v], reverse=True)
+if top_N > 0:
+    pairs = pairs[:top_N]
 c = 0
 for pair in pairs:
     c += 1
