@@ -57,6 +57,23 @@ def parse_line(line):
             tagDict[tag] = 0
         tagDict[tag] += 1
 
+def parseUnknownWord(unk):
+    if unk[0:1].isupper():
+        return 'NNP'
+    if unk.endswith("ing"):
+        return "VBG"
+    if unk.endswith("ly"):
+        return "RB"
+    if '-' in unk:
+        return "JJ"
+    if unk.endswith('s'):
+        return "NNS"
+    if bool(re.fullmatch(r'^[-+]?\d*\.?\d+(e[-+]?\d+)?$', unk)):
+        return "CD"
+
+
+    return tags[0][0]
+
 
 if __name__ == '__main__':
     trainingData = opts["-d"]
@@ -108,7 +125,7 @@ if __name__ == '__main__':
 
         allTest = 0
         correctTests = 0
-        unknownToken = []
+        unknownToken = {}
         with open(testData, "r", encoding="utf-8") as testFile:
             print(dataFile)
             for line in testFile:
@@ -116,7 +133,9 @@ if __name__ == '__main__':
                 for token in tokens:
                     word, tag = re.split(r'/(?=[^/]*$)', token)
                     if word not in tokenDict:
-                        unknownToken.append(word)
+                        unknownToken[word] = parseUnknownWord(word)
+                        if unknownToken[word] == tag:
+                            correctTests += 1
                     else:
                         if applyDict[word] == tag:
                             correctTests += 1
