@@ -59,7 +59,7 @@ if __name__ == "__main__":
     logY = []
     for i in range(len(cumlativeX)):
         logX.append(math.log(i+1,10))
-        logY.append(math.log(y[i], 10))
+        logY.append(math.log(cumlativeY[i], 10))
     lab.subplot(2, 2, 3)
     lab.plot(logX, logY)
     lab.show()
