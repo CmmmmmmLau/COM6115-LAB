@@ -8,6 +8,8 @@ import sys, re
 
 testRE = re.compile('(logic|sicstus)', re.I)
 
+part1RE = re.compile('<.*>')
+
 #------------------------------
 
 with open('RGX_DATA.html') as infs: 
@@ -17,12 +19,8 @@ with open('RGX_DATA.html') as infs:
         if line.strip() == '':
             continue
         print('  ', '-' * 100, '[%d]' % linenum, '\n   TEXT:', line, end='')
-    
-        m = testRE.search(line)
-        if m:
-            print('** TEST-RE:', m.group(1))
 
-#        mm = testRE.finditer(line)
-#        for m in mm:
-#            print('** TEST-RE:', m.group(1))
-
+        mm = testRE.finditer(line)
+        for m in mm:
+            print('** TEST-RE(Finder):', m.group(1))
+        print('** Tag:', part1RE.findall(line))
